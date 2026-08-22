@@ -1,5 +1,7 @@
 import time
-import requests
+import json
+import random
+
 from flask import Flask, jsonify, request
 from concurrent.futures import ThreadPoolExecutor
 
@@ -9,19 +11,10 @@ app = Flask(__name__)
 def get_current_time():
     return {'time': time.time()}
 
-def fetch_batch(difficulty):
-    response = requests.get(
-                f"https://random-word-api.herokuapp.com/word?number=5&diff={difficulty}"
-            )
-    return response.json()
-
-@app.route('/api/randomwords/<int:difficulty>', methods = ['GET'])
-def get_random_words(difficulty):
-    all_words = []
-    with ThreadPoolExecutor(max_workers=10) as executor:
-        futures = [executor.submit(fetch_batch, difficulty) for _ in range (20)]
-        for future in futures:
-            all_words.extend(future.result())
-
-    text = " ".join(all_words[:100])  # trim in case last batch overshoots
-    return jsonify({"difficulty": difficulty, "words": text})
+@app.route('/api/randomquote', methods = ['GET'])
+def get_random_quote():
+    with open("./quotes/wof_quotes.json", "r", encoding="utf-8") as f:
+        data = json.load(f)
+    random_data = random.choice(data)
+    text = random_data["quote"]
+    return jsonify({"quote": text})
